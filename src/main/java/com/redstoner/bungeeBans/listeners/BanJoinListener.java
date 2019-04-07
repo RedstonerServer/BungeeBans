@@ -13,9 +13,11 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
 public class BanJoinListener<T extends Ban> implements Listener {
+	private String        name;
 	private BanManager<T> bm;
 
-	public BanJoinListener(BanManager<T> bm) {
+	public BanJoinListener(String name, BanManager<T> bm) {
+		this.name = name;
 		this.bm = bm;
 	}
 
@@ -42,7 +44,7 @@ public class BanJoinListener<T extends Ban> implements Listener {
 
 		if (ban != null) {
 			event.setCancelReason(
-					new ComponentBuilder(ChatColor.RED + "You were banned by ")
+					new ComponentBuilder(ChatColor.RED + "You were " + name + " banned by ")
 							.append(ChatColor.AQUA + ban.getSource())
 							.append(ChatColor.RED + " for ")
 							.append(ChatColor.AQUA + ban.getReason())
