@@ -4,6 +4,8 @@ import com.redstoner.bungeeBans.commands.BanCommand;
 import com.redstoner.bungeeBans.commands.GetBanCommand;
 import com.redstoner.bungeeBans.commands.UnbanCommand;
 import com.redstoner.bungeeBans.json.PlayerBan;
+import com.redstoner.bungeeBans.listeners.BanJoinListener;
+import com.redstoner.bungeeBans.listeners.DisableJoinListener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 
@@ -12,44 +14,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class Main extends Plugin {
-	private File bansFile = new File("banned-players.json");
+	private File playerBanFile = new File("banned-players.json");
 
-	private BanManager<PlayerBan> playerBanManager = new BanManager<>(bansFile, PlayerBan.class);
+	private BanManager<PlayerBan> playerBanManager = new BanManager<>(playerBanFile, PlayerBan.class);
 
 	private boolean shouldSave = true;
 
 	@Override
 	public void onEnable() {
-		try {
-			getLogger().info("Loading bans...");
-
-			playerBanManager.loadBans();
-
-			getLogger().info("Loaded bans!");
-		} catch (FileNotFoundException e) {
-			getLogger().warning("Bans file does not exist! Creating!");
-
-			try {
-				if (bansFile.createNewFile()) {
-					getLogger().info("File created! Retrying load...");
-					onEnable();
-					return;
-				} else {
-					getLogger().severe("File could not be created! Disabling!");
-				}
-			} catch (IOException e2) {
-				getLogger().severe("File could not be created! Disabling!");
-				getLogger().severe(e2.getMessage());
-				e2.printStackTrace();
-			}
-
-			disable();
-			return;
-		} catch (Exception e) {
-			getLogger().severe("Failed to load bans: " + e.getMessage());
-			e.printStackTrace();
-
-			disable();
+		if (
+				loadBans("player", playerBanManager, playerBanFile)
+		) {
 			return;
 		}
 
@@ -76,16 +51,43 @@ public class Main extends Plugin {
 	}
 
 	private void disable() {
-		getLogger().severe("Disabling plugin!");
+		getLogger().severe("Players will not be able to join because of a severe error!!! Check the log output above!");
 
 		shouldSave = false;
-		this.onDisable();
-
-		PluginManager pm = getProxy().getPluginManager();
-
-		pm.unregisterListeners(this);
-		pm.unregisterCommands(this);
+		getProxy().getPluginManager().registerListener(this, new DisableJoinListener());
 	}
 
+	private boolean loadBans(String name, BanManager banManager, File banFile) {
+		try {
+			getLogger().info("Loading " + name + " bans...");
+			banManager.loadBans();
+			getLogger().info("Loaded " + name + " bans!");
 
+			return false;
+		} catch (FileNotFoundException e) {
+			getLogger().warning("Ban file (" + name + ") does not exist! Creating!");
+
+			try {
+				if (banFile.createNewFile()) {
+					getLogger().info("Ban file (" + name + ") created! Retrying load...");
+					onEnable();
+					return false;
+				}
+			} catch (IOException e2) {
+				getLogger().severe(e2.getMessage());
+				e2.printStackTrace();
+			}
+
+			getLogger().severe("Ban file (" + name + ") could not be created!");
+
+			disable();
+			return true;
+		} catch (Exception e) {
+			getLogger().severe("Failed to load " + name + " bans: " + e.getMessage());
+			e.printStackTrace();
+
+			disable();
+			return true;
+		}
+	}
 }

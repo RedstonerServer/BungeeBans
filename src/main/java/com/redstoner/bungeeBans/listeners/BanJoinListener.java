@@ -1,6 +1,8 @@
-package com.redstoner.bungeeBans;
+package com.redstoner.bungeeBans.listeners;
 
 import com.mojang.api.profiles.Profile;
+import com.redstoner.bungeeBans.BanManager;
+import com.redstoner.bungeeBans.Util;
 import com.redstoner.bungeeBans.json.Ban;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -13,7 +15,7 @@ import net.md_5.bungee.event.EventPriority;
 public class BanJoinListener<T extends Ban> implements Listener {
 	private BanManager<T> bm;
 
-	BanJoinListener(BanManager<T> bm) {
+	public BanJoinListener(BanManager<T> bm) {
 		this.bm = bm;
 	}
 
