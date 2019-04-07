@@ -12,6 +12,7 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 
 public class Main extends Plugin {
 	private File playerBanFile = new File("banned-players.json");
@@ -64,7 +65,7 @@ public class Main extends Plugin {
 			getLogger().info("Loaded " + name + " bans!");
 
 			return false;
-		} catch (FileNotFoundException e) {
+		} catch (FileNotFoundException | NoSuchFileException e) {
 			getLogger().warning("Ban file (" + name + ") does not exist! Creating!");
 
 			try {
