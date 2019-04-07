@@ -33,7 +33,7 @@ public class BanCommand extends Command {
 		switch (args.length) {
 			case 0:
 				sender.sendMessage(
-						new ComponentBuilder("Usage: ")
+						new ComponentBuilder(ChatColor.RED + "Usage: ")
 								.append(ChatColor.AQUA + "/ban ")
 								.append(ChatColor.GOLD + "<username> ")
 								.append(ChatColor.YELLOW + "[reason]")
@@ -67,9 +67,8 @@ public class BanCommand extends Command {
 
 		try {
 			bm.saveBans();
-			sender.sendMessage(new TextComponent(ChatColor.GREEN + "Saved bans to file!"));
 		} catch (IOException e) {
-			sender.sendMessage(new TextComponent(ChatColor.RED + "Failed to save bans to file!"));
+			sender.sendMessage(new TextComponent(ChatColor.RED + "Failed to save player bans to file! (nothing was changed)"));
 			e.printStackTrace();
 
 			bm.removeBan(ban);

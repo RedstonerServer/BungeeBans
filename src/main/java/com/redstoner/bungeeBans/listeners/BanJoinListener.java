@@ -25,26 +25,40 @@ public class BanJoinListener<T extends Ban> implements Listener {
 	public void onJoin(PreLoginEvent event) {
 		event.setCancelled(true);
 
+		T ban;
+
 		PendingConnection conn = event.getConnection();
-		String            name = conn.getName();
 
-		Profile[] profiles = Util.findProfilesByNames(name);
+		switch (this.name) {
+			case "player":
+				String name = conn.getName();
 
-		if (profiles.length != 1) {
-			event.setCancelReason(
-					new ComponentBuilder(ChatColor.RED + "Server error occured while joining: ")
-							.append(ChatColor.AQUA + "The mojang API does not know your UUID!")
-							.create()
-			);
+				Profile[] profiles = Util.findProfilesByNames(name);
 
-			return;
+				if (profiles.length != 1) {
+					event.setCancelReason(
+							new ComponentBuilder(ChatColor.RED + "Server error occured while joining: ")
+									.append(ChatColor.AQUA + "The mojang API does not know your UUID!")
+									.create()
+					);
+
+					return;
+				}
+
+				ban = bm.getBan(Util.dashUUID(profiles[0].getId()));
+				break;
+			case "IP":
+				String address = conn.getAddress().getAddress().getHostAddress();
+				System.out.println("IP connection: " + address);
+				ban = bm.getBan(address);
+				break;
+			default:
+				throw new UnsupportedOperationException();
 		}
-
-		T ban = bm.getBan(Util.dashUUID(profiles[0].getId()));
 
 		if (ban != null) {
 			event.setCancelReason(
-					new ComponentBuilder(ChatColor.RED + "You were " + name + " banned by ")
+					new ComponentBuilder(ChatColor.RED + "You were " + this.name + " banned by ")
 							.append(ChatColor.AQUA + ban.getSource())
 							.append(ChatColor.RED + " for ")
 							.append(ChatColor.AQUA + ban.getReason())

@@ -1,6 +1,5 @@
 package com.redstoner.bungeeBans.commands;
 
-import com.mojang.api.profiles.HttpProfileRepository;
 import com.mojang.api.profiles.Profile;
 import com.redstoner.bungeeBans.BanManager;
 import com.redstoner.bungeeBans.Util;
@@ -14,8 +13,6 @@ import net.md_5.bungee.api.plugin.Command;
 import java.io.IOException;
 
 public class UnbanCommand extends Command {
-	HttpProfileRepository profileRepo = new HttpProfileRepository("minecraft");
-
 	private BanManager<PlayerBan> bm;
 
 	public UnbanCommand(BanManager<PlayerBan> bm) {
@@ -28,8 +25,7 @@ public class UnbanCommand extends Command {
 	public void execute(CommandSender sender, String[] args) {
 		if (args.length != 1) {
 			sender.sendMessage(
-					new ComponentBuilder(ChatColor.RED + "Invalid command! ")
-							.append("Usage: ")
+					new ComponentBuilder(ChatColor.RED + "Usage: ")
 							.append(ChatColor.AQUA + "/unban ")
 							.append(ChatColor.GOLD + "<username> ")
 							.create()
@@ -38,7 +34,7 @@ public class UnbanCommand extends Command {
 			return;
 		}
 
-		Profile[] profiles = profileRepo.findProfilesByNames(args[0]);
+		Profile[] profiles = Util.findProfilesByNames(args[0]);
 
 		if (profiles.length != 1) {
 			sender.sendMessage(new TextComponent(ChatColor.RED + "Invalid name!"));
@@ -59,9 +55,8 @@ public class UnbanCommand extends Command {
 
 		try {
 			bm.saveBans();
-			sender.sendMessage(new TextComponent(ChatColor.GREEN + "Saved bans to file!"));
 		} catch (IOException e) {
-			sender.sendMessage(new TextComponent(ChatColor.RED + "Failed to save bans to file!"));
+			sender.sendMessage(new TextComponent(ChatColor.RED + "Failed to save player bans to file! (nothing was changed)"));
 			e.printStackTrace();
 
 			bm.addBan(ban);

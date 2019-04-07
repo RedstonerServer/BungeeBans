@@ -1,8 +1,7 @@
 package com.redstoner.bungeeBans;
 
-import com.redstoner.bungeeBans.commands.BanCommand;
-import com.redstoner.bungeeBans.commands.GetBanCommand;
-import com.redstoner.bungeeBans.commands.UnbanCommand;
+import com.redstoner.bungeeBans.commands.*;
+import com.redstoner.bungeeBans.json.IPBan;
 import com.redstoner.bungeeBans.json.PlayerBan;
 import com.redstoner.bungeeBans.listeners.BanJoinListener;
 import com.redstoner.bungeeBans.listeners.DisableJoinListener;
@@ -16,15 +15,18 @@ import java.nio.file.NoSuchFileException;
 
 public class Main extends Plugin {
 	private File playerBanFile = new File("banned-players.json");
+	private File ipBanFile     = new File("banned-ips.json");
 
 	private BanManager<PlayerBan> playerBanManager = new BanManager<>(playerBanFile, PlayerBan.class);
+	private BanManager<IPBan>     ipBanManager     = new BanManager<>(ipBanFile, IPBan.class);
 
 	private boolean shouldSave = true;
 
 	@Override
 	public void onEnable() {
 		if (
-				loadBans("player", playerBanManager, playerBanFile)
+				loadBans("player", playerBanManager, playerBanFile) ||
+				loadBans("IP", ipBanManager, ipBanFile)
 		) {
 			return;
 		}
@@ -35,19 +37,19 @@ public class Main extends Plugin {
 		pm.registerCommand(this, new UnbanCommand(playerBanManager));
 		pm.registerCommand(this, new GetBanCommand(playerBanManager));
 
-		pm.registerListener(this, new BanJoinListener<>(playerBanManager));
+		pm.registerCommand(this, new BanIPCommand(ipBanManager, this));
+		pm.registerCommand(this, new UnbanIPCommand(ipBanManager));
+		pm.registerCommand(this, new GetIPBanCommand(ipBanManager));
+
+		pm.registerListener(this, new BanJoinListener<>("player", playerBanManager));
+		pm.registerListener(this, new BanJoinListener<>("IP", ipBanManager));
 	}
 
 	@Override
 	public void onDisable() {
 		if (shouldSave) {
-			try {
-				playerBanManager.saveBans();
-				getLogger().info("Saved bans to file!");
-			} catch (IOException e) {
-				getLogger().severe("Failed to save bans: " + e.getMessage());
-				e.printStackTrace();
-			}
+			saveBans("player", playerBanManager);
+			saveBans("IP", ipBanManager);
 		}
 	}
 
@@ -89,6 +91,16 @@ public class Main extends Plugin {
 
 			disable();
 			return true;
+		}
+	}
+
+	private void saveBans(String name, BanManager banManager) {
+		try {
+			playerBanManager.saveBans();
+			getLogger().info("Saved " + name + " bans to file!");
+		} catch (IOException e) {
+			getLogger().severe("Failed to save " + name + " bans: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 }
