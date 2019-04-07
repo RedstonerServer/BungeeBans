@@ -27,22 +27,43 @@ public class UnbanCommand extends Command {
 			sender.sendMessage(
 					new ComponentBuilder(ChatColor.RED + "Usage: ")
 							.append(ChatColor.AQUA + "/unban ")
-							.append(ChatColor.GOLD + "<username> ")
+							.append(ChatColor.GOLD + "<username/uuid> ")
 							.create()
 			);
 
 			return;
 		}
 
-		Profile[] profiles = Util.findProfilesByNames(args[0]);
+		String uuid;
+		String name;
 
-		if (profiles.length != 1) {
-			sender.sendMessage(new TextComponent(ChatColor.RED + "Invalid name!"));
-			return;
+		if (Util.validateUUID(args[0])) {
+			uuid = args[0];
+
+			try {
+				Util.NameChange[] nameChanges = Util.findNameChangesByUUID(uuid);
+
+				if (nameChanges.length == 0) {
+					sender.sendMessage(new TextComponent(ChatColor.RED + "Invalid UUID!"));
+					return;
+				}
+
+				name = nameChanges[nameChanges.length - 1].name;
+			} catch (Util.MojangException e) {
+				sender.sendMessage(new TextComponent(ChatColor.RED + e.getMessage()));
+				return;
+			}
+		} else {
+			Profile[] profiles = Util.findProfilesByNames(args[0]);
+
+			if (profiles.length != 1) {
+				sender.sendMessage(new TextComponent(ChatColor.RED + "Invalid name!"));
+				return;
+			}
+
+			uuid = Util.dashUUID(profiles[0].getId());
+			name = profiles[0].getName();
 		}
-
-		String uuid = Util.dashUUID(profiles[0].getId());
-		String name = profiles[0].getName();
 
 		PlayerBan ban = bm.getBan(uuid);
 

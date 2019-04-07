@@ -35,7 +35,7 @@ public class BanCommand extends Command {
 				sender.sendMessage(
 						new ComponentBuilder(ChatColor.RED + "Usage: ")
 								.append(ChatColor.AQUA + "/ban ")
-								.append(ChatColor.GOLD + "<username> ")
+								.append(ChatColor.GOLD + "<username/uuid> ")
 								.append(ChatColor.YELLOW + "[reason]")
 								.create()
 				);
@@ -46,16 +46,37 @@ public class BanCommand extends Command {
 				break;
 		}
 
-		Profile[] profiles = Util.findProfilesByNames(args[0]);
-
-		if (profiles.length != 1) {
-			sender.sendMessage(new TextComponent(ChatColor.RED + "Invalid name!"));
-			return;
-		}
-
-		String uuid    = Util.dashUUID(profiles[0].getId());
-		String name    = profiles[0].getName();
+		String uuid;
+		String name;
 		String expires = "forever"; //TODO: expiry option
+
+		if (Util.validateUUID(args[0])) {
+			uuid = args[0];
+
+			try {
+				Util.NameChange[] nameChanges = Util.findNameChangesByUUID(uuid);
+
+				if (nameChanges.length == 0) {
+					sender.sendMessage(new TextComponent(ChatColor.RED + "Invalid UUID!"));
+					return;
+				}
+
+				name = nameChanges[nameChanges.length - 1].name;
+			} catch (Util.MojangException e) {
+				sender.sendMessage(new TextComponent(ChatColor.RED + e.getMessage()));
+				return;
+			}
+		} else {
+			Profile[] profiles = Util.findProfilesByNames(args[0]);
+
+			if (profiles.length != 1) {
+				sender.sendMessage(new TextComponent(ChatColor.RED + "Invalid name!"));
+				return;
+			}
+
+			uuid = Util.dashUUID(profiles[0].getId());
+			name = profiles[0].getName();
+		}
 
 		if (bm.getBan(uuid) != null) {
 			sender.sendMessage(new TextComponent(ChatColor.RED + "That player is already banned!"));
